@@ -1,0 +1,9 @@
+{
+  "venvPath": "",
+  "venv": "venv",
+  "extraPaths": ["src"],
+  "typeCheckingMode": "standard",
+  "reportUnknownVariableType": false,
+  "reportUnknownArgumentType": false,
+  "reportUnknownMemberType": false
+}

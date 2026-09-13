@@ -1,0 +1,2 @@
+{"prompt": "Get top 5 users by total order value", "response": "SELECT u.id, SUM(o.total) FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY SUM(o.total) DESC LIMIT 5;"}
+{"prompt": "Count active subscriptions", "response": "SELECT COUNT(*) FROM subscriptions WHERE status = 'active';"}
