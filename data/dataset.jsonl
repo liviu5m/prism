@@ -1,2 +1,22 @@
 {"prompt": "Get top 5 users by total order value", "response": "SELECT u.id, SUM(o.total) FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY SUM(o.total) DESC LIMIT 5;"}
 {"prompt": "Count active subscriptions", "response": "SELECT COUNT(*) FROM subscriptions WHERE status = 'active';"}
+{"prompt": "Find total revenue for each product category", "response": "SELECT c.name, SUM(oi.quantity * oi.price) FROM categories c JOIN products p ON c.id = p.category_id JOIN order_items oi ON p.id = oi.product_id GROUP BY c.name;"}
+{"prompt": "List users who placed orders greater than 1000", "response": "SELECT DISTINCT u.id, u.name FROM users u JOIN orders o ON u.id = o.user_id WHERE o.total > 1000;"}
+{"prompt": "Get average order value per customer", "response": "SELECT user_id, AVG(total) FROM orders GROUP BY user_id;"}
+{"prompt": "Find products with zero stock", "response": "SELECT id, name FROM products WHERE stock = 0;"}
+{"prompt": "List orders placed in the last 30 days", "response": "SELECT * FROM orders WHERE created_at >= datetime('now', '-30 days');"}
+{"prompt": "Get top 3 most expensive products", "response": "SELECT name, price FROM products ORDER BY price DESC LIMIT 3;"}
+{"prompt": "Count total customers", "response": "SELECT COUNT(*) FROM users;"}
+{"prompt": "Find customers with no orders", "response": "SELECT u.id, u.name FROM users u LEFT JOIN orders o ON u.id = o.user_id WHERE o.id IS NULL;"}
+{"prompt": "Get total sales per month", "response": "SELECT strftime('%Y-%m', created_at) AS month, SUM(total) FROM orders GROUP BY month;"}
+{"prompt": "Find users signed up in 2025", "response": "SELECT * FROM users WHERE strftime('%Y', signup_date) = '2025';"}
+{"prompt": "List products out of stock with category name", "response": "SELECT p.name, c.name FROM products p JOIN categories c ON p.category_id = c.id WHERE p.stock = 0;"}
+{"prompt": "Get max order total", "response": "SELECT MAX(total) FROM orders;"}
+{"prompt": "Find second highest paid employee", "response": "SELECT salary FROM employees ORDER BY salary DESC LIMIT 1 OFFSET 1;"}
+{"prompt": "List all unique countries of customers", "response": "SELECT DISTINCT country FROM users;"}
+{"prompt": "Get count of orders per status", "response": "SELECT status, COUNT(*) FROM orders GROUP BY status;"}
+{"prompt": "Find items in order 105", "response": "SELECT p.name, oi.quantity, oi.price FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = 105;"}
+{"prompt": "Update product price by id", "response": "UPDATE products SET price = 29.99 WHERE id = 12;"}
+{"prompt": "Delete inactive users", "response": "DELETE FROM users WHERE status = 'inactive' AND last_login < datetime('now', '-1 year');"}
+{"prompt": "Find average product price per category", "response": "SELECT c.name, AVG(p.price) FROM categories c JOIN products p ON c.id = p.category_id GROUP BY c.name;"}
+{"prompt": "List top 10 most active users by order count", "response": "SELECT u.id, u.name, COUNT(o.id) FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY COUNT(o.id) DESC LIMIT 10;"}

@@ -41,6 +41,7 @@ trainer = SFTTrainer(
         max_length=256,
         dataset_text_field="text",
         optim="adamw_torch",
+        num_train_epochs=10,
     ),
 )
 trainer.train()
