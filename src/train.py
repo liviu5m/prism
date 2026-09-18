@@ -6,7 +6,7 @@ from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
 from dataset import getRecords
 
-model_id = "TinyLlama/TinyLlama-1.1B-Chat-v1.0"
+model_id = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
 adapter_path = "final_model"
 
 
@@ -41,7 +41,7 @@ trainer = SFTTrainer(
         max_length=256,
         dataset_text_field="text",
         optim="adamw_torch",
-        num_train_epochs=10,
+        num_train_epochs=100,
     ),
 )
 trainer.train()

@@ -1,7 +1,8 @@
 import json
 from transformers import AutoTokenizer
 
-tokenizer = AutoTokenizer.from_pretrained("TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+model_id = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
+tokenizer = AutoTokenizer.from_pretrained(model_id)
 
 def getTokens(file):
     data = [] 

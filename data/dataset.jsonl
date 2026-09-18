@@ -20,3 +20,31 @@
 {"prompt": "Delete inactive users", "response": "DELETE FROM users WHERE status = 'inactive' AND last_login < datetime('now', '-1 year');"}
 {"prompt": "Find average product price per category", "response": "SELECT c.name, AVG(p.price) FROM categories c JOIN products p ON c.id = p.category_id GROUP BY c.name;"}
 {"prompt": "List top 10 most active users by order count", "response": "SELECT u.id, u.name, COUNT(o.id) FROM users u JOIN orders o ON u.id = o.user_id GROUP BY u.id ORDER BY COUNT(o.id) DESC LIMIT 10;"}
+{"prompt": "Get all users", "response": "SELECT * FROM users;"}
+{"prompt": "Count total users", "response": "SELECT COUNT(*) FROM users;"}
+{"prompt": "List all active products", "response": "SELECT * FROM products WHERE status = 'active';"}
+{"prompt": "Find product by name", "response": "SELECT * FROM products WHERE name = 'Laptop';"}
+{"prompt": "Get orders for user 5", "response": "SELECT * FROM orders WHERE user_id = 5;"}
+{"prompt": "Calculate total revenue", "response": "SELECT SUM(total) FROM orders;"}
+{"prompt": "Find average order amount", "response": "SELECT AVG(total) FROM orders;"}
+{"prompt": "Get max product price", "response": "SELECT MAX(price) FROM products;"}
+{"prompt": "Get min product price", "response": "SELECT MIN(price) FROM products;"}
+{"prompt": "List users ordered by name", "response": "SELECT * FROM users ORDER BY name ASC;"}
+{"prompt": "List products ordered by price desc", "response": "SELECT * FROM products ORDER BY price DESC;"}
+{"prompt": "Get top 5 expensive products", "response": "SELECT * FROM products ORDER BY price DESC LIMIT 5;"}
+{"prompt": "Get 10 cheapest products", "response": "SELECT * FROM products ORDER BY price ASC LIMIT 10;"}
+{"prompt": "Find users with gmail email", "response": "SELECT * FROM users WHERE email LIKE '%@gmail.com';"}
+{"prompt": "Count orders per user", "response": "SELECT user_id, COUNT(*) FROM orders GROUP BY user_id;"}
+{"prompt": "Find categories with more than 5 products", "response": "SELECT category_id, COUNT(*) FROM products GROUP BY category_id HAVING COUNT(*) > 5;"}
+{"prompt": "Get order details with user name", "response": "SELECT o.id, u.name, o.total FROM orders o JOIN users u ON o.user_id = u.id;"}
+{"prompt": "Find products in Electronics category", "response": "SELECT p.* FROM products p JOIN categories c ON p.category_id = c.id WHERE c.name = 'Electronics';"}
+{"prompt": "Update user email", "response": "UPDATE users SET email = 'new@email.com' WHERE id = 1;"}
+{"prompt": "Delete order by id", "response": "DELETE FROM orders WHERE id = 42;"}
+{"prompt": "Insert new user", "response": "INSERT INTO users (name, email) VALUES ('John Doe', 'john@example.com');"}
+{"prompt": "Find users who registered in 2024", "response": "SELECT * FROM users WHERE strftime('%Y', created_at) = '2024';"}
+{"prompt": "Get orders placed today", "response": "SELECT * FROM orders WHERE date(created_at) = date('now');"}
+{"prompt": "Find products with stock less than 10", "response": "SELECT * FROM products WHERE stock < 10;"}
+{"prompt": "List unpaid orders", "response": "SELECT * FROM orders WHERE payment_status = 'unpaid';"}
+{"prompt": "Get total items sold per product", "response": "SELECT product_id, SUM(quantity) FROM order_items GROUP BY product_id;"}
+{"prompt": "Find customer with highest total spend", "response": "SELECT user_id, SUM(total) FROM orders GROUP BY user_id ORDER BY SUM(total) DESC LIMIT 1;"}
+{"prompt": "List empty categories", "response": "SELECT c.* FROM categories c LEFT JOIN products p ON c.id = p.category_id WHERE p.id IS NULL;"}
