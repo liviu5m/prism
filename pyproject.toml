@@ -1,0 +1,50 @@
+[project]
+name = "prism"
+version = "0.1.0"
+description = "Fine-tune, quantize and serve TinyLlama-1.1B for schema-conditioned Text-to-SQLite SQL"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "prism" }]
+dependencies = [
+    "torch==2.14.0",
+    "transformers==5.17.0",
+    "peft==0.20.0",
+    "trl==1.13.0",
+    "datasets==5.0.1",
+    "bitsandbytes==0.50.2",
+    "accelerate==1.15.0",
+    "mlflow",
+    "pyyaml",
+    "pydantic",
+    "sqlglot",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "ruff", "pyright"]
+serve = ["vllm==0.29.0", "fastapi", "uvicorn", "prometheus-client", "httpx"]
+quant = ["llmcompressor"]
+
+[project.scripts]
+forge-train = "prism.train.sft:main"
+forge-eval = "prism.eval.harness:main"
+forge-serve = "prism.forge.serve.app:main"
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["forge*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gpu: needs CUDA GPU",
+    "slow: long-running",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"

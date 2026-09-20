@@ -1,7 +1,7 @@
 from datasets import Dataset
-from torch import torch
+import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
-from peft import LoraConfig, PeftModel, get_peft_model
+from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
 from dataset import getRecords
@@ -16,33 +16,46 @@ model = AutoModelForCausalLM.from_pretrained(
     quantization_config=BitsAndBytesConfig(
         load_in_4bit=True,
         bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch.float16,
+        bnb_4bit_compute_dtype=torch.bfloat16,
+        bnb_4bit_use_double_quant=True,
     ),
-    dtype=torch.float16,
-)
+    dtype=torch.bfloat16,
 
+)
+model = prepare_model_for_kbit_training(model, use_gradient_checkpointing=True)
 model = get_peft_model(model, LoraConfig(
-    r=8, lora_alpha=16, 
-    target_modules=["q_proj", "v_proj"], 
-    task_type="CAUSAL_LM"
+    r=16, lora_alpha=32, 
+    task_type="CAUSAL_LM",
+    lora_dropout=0.05,
+    bias="none",
+    target_modules="all-linear"
 ))
 
-data = getRecords("data/dataset.jsonl")
-dataset = Dataset.from_list(data)
+train_ds = Dataset.from_list(getRecords("datasets/train.jsonl"))
+eval_ds = Dataset.from_list(getRecords("datasets/dev.jsonl"))
 
 trainer = SFTTrainer(
     model=model,
-    train_dataset=dataset,
+    train_dataset=train_ds,
+    eval_dataset=eval_ds,
     args=SFTConfig(
-        output_dir="final_model",
-        per_device_train_batch_size=1,
-        gradient_accumulation_steps=8,
-        fp16=False, bf16=False,
-        max_length=256,
-        dataset_text_field="text",
-        optim="adamw_torch",
-        num_train_epochs=100,
+        output_dir="artifacts/sft_v1",
+        max_length=512,                     
+        num_train_epochs=4,               
+        learning_rate=2e-4,              
+        lr_scheduler_type="cosine",
+        per_device_train_batch_size=2,  
+        gradient_accumulation_steps=8, 
+        warmup_steps=3,
+        bf16=True,                    
+        gradient_checkpointing=True,
+        optim="adamw_torch_fused",
+        eval_strategy="epoch",
+        save_strategy="epoch",
+        load_best_model_at_end=True,
+        metric_for_best_model="eval_loss",
+        seed=42,
     ),
 )
 trainer.train()
-trainer.save_model("final_model")
+trainer.save_model("artifacts/sft_v1")

@@ -1,35 +1,57 @@
-# Python / Byte-compiled artifacts
+# Python / byte-compiled
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environments
+# Virtual environments (train / serve / quant conflict on torch pins)
 venv/
+venv-serve/
+venv-quant/
 .venv/
 env/
 ENV/
 
-# Model Checkpoints, Weights, & Adapters
+# Training outputs: adapters + checkpoints live on HF Hub, not git
+artifacts/
 final_model/
+dpo_model/
 outputs/
-
-# Data & Large datasets
-data/
-
-# Model binary files & weights (safety net)
+checkpoints/
 *.safetensors
 *.bin
 *.pth
 *.pt
 *.onnx
 
-# Environment variables & secrets
+# Raw data pool only; versioned snapshots data/v*/ MUST stay tracked
+data/raw/
+*.db-journal
+*.db-shm
+*.db-wal
+
+# Experiment tracking (local only)
+mlflow.db
+mlflow/
+wandb/
+
+# Generated figures; report .md files stay tracked
+reports/figures/
+
+# Agent scaffolding: local workflow, not project deliverable
+.clinerules/
+.cline/
+.clineignore
+CLAUDE.md
+build.md
+
+# Secrets
 .env
 .env.local
 
-# OS & Editor specific files
+# OS / editor
 .DS_Store
 .idea/
 .vscode/
 *.swp
 *.swo
+
