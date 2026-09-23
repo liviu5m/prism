@@ -1,4 +1,4 @@
-# Forge — Learn & Build Roadmap (phase by phase)
+# Prism — Learn & Build Roadmap (phase by phase)
 
 **Read this first.** `ROADMAP.md` explains the *concepts* behind each module, and `roadmap.txt` is the original
 short phase list. **This file is the operating manual**: for every phase it gives you
@@ -64,7 +64,7 @@ A requirement counts only when an **artifact** exists. Keep this table at the to
 | DPO stretch goal | `artifacts/dpo_v1/`, `rewards/margins ≠ 0`, measured exec-acc delta vs SFT |
 | Task-specific eval harness | `reports/eval_v1.md`: base vs SFT vs DPO vs quantized, per-slice, with CIs |
 | Quantization + quality-loss report | `artifacts/merged_w4a16/` + table of size / VRAM / latency / accuracy delta |
-| vLLM + autoscaling + cost/latency dashboard | `forge/serve/*`, load-test numbers, `/dashboard` output, control-loop chart |
+| vLLM + autoscaling + cost/latency dashboard | `prism/serve/*`, load-test numbers, `/dashboard` output, control-loop chart |
 | A/B serving | sticky routing, per-variant metrics, a written promotion/rollback decision |
 | Reproducible from one config + snapshot | `run_manifest.json` per run: config hash + dataset hash + git SHA + seed + versions |
 | Throughput vs untuned base on same HW | `reports/serving_bench.md`: base, SFT, LoRA overhead, HF-generate vs vLLM |
@@ -83,15 +83,15 @@ A requirement counts only when an **artifact** exists. Keep this table at the to
 
 ```
 prism/
-├── pyproject.toml              # package + deps + console scripts (forge-train, forge-eval, forge-serve)
+├── pyproject.toml              # package + deps + console scripts (prism-train, prism-eval, prism-serve)
 ├── Makefile                    # one target per phase step
-├── FORGE_ROADMAP.md            # this file
+├── PRISM_ROADMAP.md            # this file
 ├── configs/
 │   ├── data/v1.yaml            # sources, cleaning rules, split ratios, dedupe thresholds
 │   ├── sft/r16_alllinear.yaml  # model, LoRA, SFT hyperparams, seed
 │   ├── dpo/v1.yaml             # β, lr, pair-generation settings
 │   └── serve.yaml              # engine, queue limits, A/B split, cost model
-├── forge/
+├── prism/
 │   ├── config.py               # load YAML → pydantic model; compute config_hash
 │   ├── data/{build,schema,split,version}.py
 │   ├── train/{sft,dpo,sweep}.py
@@ -117,14 +117,14 @@ Also fix the current contradiction: `.gitignore` ignores `data/` and `*.safetens
 ### Build
 1. `pyproject.toml` (PEP 621) with `[project] dependencies` = torch/transformers/peft/trl/datasets/bitsandbytes/accelerate/mlflow,
    `[project.optional-dependencies] serve = ["vllm==0.29.0","fastapi","uvicorn","prometheus-client","httpx"]`, `quant = ["llmcompressor"]`,
-   and `[project.scripts] forge-train / forge-eval / forge-serve`.
+   and `[project.scripts] prism-train / prism-eval / prism-serve`.
 2. Three venvs, because the pins genuinely conflict (`vllm==0.29.0` pins `torch==2.13.0`, you train on 2.14.0):
    ```bash
    uv venv venv            && uv pip install -e ".[dev]"     # training (keep existing venv if you prefer)
    uv venv venv-serve      && uv pip install -e ".[serve]"   # vLLM + FastAPI (torch 2.13.0)
    uv venv venv-quant      && uv pip install -e ".[quant]"   # llm-compressor (quantization)
    ```
-3. Move code into the `forge/` package from section 2 (keeping thin wrapper scripts if you like). Import by module path, never
+3. Move code into the `prism/` package from section 2 (keeping thin wrapper scripts if you like). Import by module path, never
    `from dataset import ...` (that only works when cwd == `src/` and breaks the moment you add tests or CI).
 4. `Makefile`: `make data | make train | make sweep | make eval | make quant | make serve | make bench | make test`.
 5. `.gitignore` policy: never ignore `data/v*.jsonl` (they are the product!) but ignore `data/raw/`, `artifacts/`, `reports/figures/`;
@@ -134,12 +134,12 @@ Also fix the current contradiction: `.gitignore` ignores `data/` and `*.safetens
    the scorecard table from section 1, and a **Quickstart** with the exact commands to reproduce everything.
 
 ### Prove it
-`make test` passes on a clean clone; `git ls-files | grep -c pycache` returns 0; `python -c "import forge"` works from any cwd.
+`make test` passes on a clean clone; `git ls-files | grep -c pycache` returns 0; `python -c "import prism"` works from any cwd.
 
 ### Learn (≈4 h)
 | Topic | Why you need it |
 |---|---|
-| Python packaging: `pyproject.toml`, src layout, editable installs, entry points | So `forge-eval` is a command, not a file you must be standing next to |
+| Python packaging: `pyproject.toml`, src layout, editable installs, entry points | So `prism-eval` is a command, not a file you must be standing next to |
 | Dependency resolution & lockfiles (`uv pip compile`, `pip-tools`), why pinning matters | Two tools needing different `torch` versions is a real production problem — you are solving it with venv isolation |
 | Reproducibility basics: seeds (`random`, `numpy`, `torch`), cudnn determinism, git SHA capture | Prerequisite for "reproducible from a single config" |
 | Git semantics: tracked vs ignored, LFS, `git rm --cached`, commits that are reviewable | Reviewers read your history; binaries + pycache signal sloppiness |
@@ -154,7 +154,7 @@ Also fix the current contradiction: `.gitignore` ignores `data/` and `*.safetens
 > This is the highest-ROI phase in the whole project. Model choice and hyperparameters are second-order;
 > data quality, prompt informativeness and leakage control decide your headline number.
 
-### 1.1 Build the fixture databases (`forge/data/schema.py`, `data/fixtures/`)
+### 1.1 Build the fixture databases (`prism/data/schema.py`, `data/fixtures/`)
 - `shop.sql`: `users(id, name, created_at)`, `orders(id, user_id, total, created_at)`, `order_items(order_id, product_id, quantity, price)`,
   `products(id, name, category_id, price, stock)`, `categories(id, name)`, `subscriptions(id, user_id, status, started_at)`.
 - `library.sql`: a **second, never-trained schema** (`authors`, `books`, `loans`, `members`) used only in the test split.
@@ -162,7 +162,7 @@ Also fix the current contradiction: `.gitignore` ignores `data/` and `*.safetens
   unique tiebreaker column), `NULL`s present in some columns, statuses with different casing.
 - **Why:** execution accuracy is only meaningful if the DB is deterministic and rich enough that a wrong `WHERE`/`JOIN` changes the result set.
 
-### 1.2 Curation pipeline (`forge/data/build.py`)
+### 1.2 Curation pipeline (`prism/data/build.py`)
 Steps, in order, with counts logged at each stage (this table goes in the dataset card):
 1. **Load** raw candidate pairs (`data/raw/*.jsonl`) → 2. **Normalise** (strip markdown fences, collapse whitespace, one statement per row) →
 3. **Validate**: SQL parses (`sqlglot`) **and** executes on the fixture DB without error; quarantine failures into `data/raw/rejected.jsonl` with the reason →
@@ -170,7 +170,7 @@ Steps, in order, with counts logged at each stage (this table goes in the datase
 5. **Balance**: report the distribution over query-pattern buckets (filter, aggregate, join, group-by, subquery, order+limit, date arithmetic) and fill gaps until each bucket has ≥ 15 train examples →
 6. **Format**: frozen prompt template (below) → 7. **Split and shard** (below).
 
-**Frozen prompt template** (identical in data build, training, evaluation and serving — put it in *one* function `forge/data/prompt.py::render(schema_ddl, question)` and never inline it elsewhere):
+**Frozen prompt template** (identical in data build, training, evaluation and serving — put it in *one* function `prism/data/prompt.py::render(schema_ddl, question)` and never inline it elsewhere):
 ```text
 ### Schema:
 CREATE TABLE subscriptions (id INTEGER PRIMARY KEY, user_id INTEGER, status TEXT, started_at TEXT);
@@ -194,7 +194,7 @@ SELECT COUNT(*) FROM subscriptions WHERE status = 'active';
 Splitting is deterministic: `bucket = int(sha256(normalised_question)[:8], 16) % 100` → 80/10/10, or split by *pattern family*
 so that dev/test contain phrasings the model has not seen verbatim.
 
-### 1.4 Version + document (`forge/data/version.py`)
+### 1.4 Version + document (`prism/data/version.py`)
 `data/v1/manifest.json`: per-file sha256, row counts, per-stage counts (loaded/validated/deduped/dropped), the config hash,
 build-script git SHA, token-length percentiles. `data/v1/DATASET_CARD.md`: motivation, schema, splits, how pairs were produced
 and verified (auto-verified by execution + manual review of a 20 % sample), known limits (English only, single statement, one DB dialect), licence.
@@ -231,7 +231,7 @@ Why can 100 epochs on 50 examples look like a beautiful loss curve and still pro
 > Goal: replace `src/train.py` (hardcoded, 100 epochs on 50 rows, no eval split, chosen by loss) with a
 > reproducible, config-driven, swept, MLflow-tracked trainer whose winner is chosen by **dev execution accuracy**.
 
-### 2.1 `forge/config.py` — reproducibility spine
+### 2.1 `prism/config.py` — reproducibility spine
 - Load YAML into a pydantic model; refuse unknown keys (typos must fail loudly).
 - `config_hash = sha256(canonical_json(cfg))`; write `run_manifest.json` next to every artifact containing:
   config (+hash), dataset manifest sha256, git SHA, seed, package versions (torch/transformers/peft/trl/bnb),
@@ -276,13 +276,13 @@ sft:
 
 Add at startup: assert dataset sha256 == the one in the config; print trainable/ total param ratio; log prompt token-length percentiles.
 
-### 2.3 Sweep (`configs/sft/sweep.yaml`, `forge/train/sweep.py`)
+### 2.3 Sweep (`configs/sft/sweep.yaml`, `prism/train/sweep.py`)
 - Coarse grid: `r ∈ {8,16,32}` × `lr ∈ {1e-4,2e-4,5e-4}` × `targets ∈ {qv, all-linear}` = 18 cells; run 12 (e.g. r=32 & qv excluded as a-priori dominated) — one overnight, 15–30 min/run on the 3050.
 - Then a refinement run around the best cell (dropout 0 vs 0.05, max_length 512 vs 768, epochs 3 vs 6).
 - Efficient alternative worth implementing and describing: **successive halving** — 1-epoch proxy for all cells, keep top 1/3, full run only for survivors.
 - Rank runs by **dev execution accuracy** (call the Phase-3 harness on each saved adapter), then by dev loss as tiebreak. Log the metric back into MLflow (`mlflow.log_metric`) so the sweep table is one query.
 
-### 2.4 MLflow (`forge/train/sft.py` logging)
+### 2.4 MLflow (`prism/train/sft.py` logging)
 ```bash
 uv pip install mlflow
 mlflow ui --backend-store-uri sqlite:///mlflow.db --port 5000
@@ -329,25 +329,25 @@ Why must the bnb `compute_dtype` match autocast dtype? What is your effective ba
 > scores **any** checkpoint — HF+LoRA, merged fp16, quantized, vLLM-served — against the base model, with slices, CIs and a written report.
 > This is the single artifact that turns "I fine-tuned a model" into "I improved execution accuracy from X % to Y %".
 
-### 3.1 `forge/eval/harness.py`
+### 3.1 `prism/eval/harness.py`
 - `ModelSpec`: `{kind: hf_peft | hf_merged | vllm, path, adapter, engine_url}` — same interface for every checkpoint.
 - Generation: **greedy (`do_sample=False`)** for the headline metric (reproducible), plus an optional `temperature=0.2, n=4` pass for stability.
 - Extraction: stop on EOS / next `###` / first `;`; strip markdown fences; keep one statement; normalise (lowercase keywords, collapse whitespace, drop trailing `;`).
-- **Template parity**: call `forge/data/prompt.py::render()` — the same function used for training and serving. Never re-inline the template.
+- **Template parity**: call `prism/data/prompt.py::render()` — the same function used for training and serving. Never re-inline the template.
 
-### 3.2 `forge/eval/metrics.py` — what to compute
+### 3.2 `prism/eval/metrics.py` — what to compute
 | Metric | Definition | Why |
 |---|---|---|
 | **Execution accuracy (headline)** | execute pred & gold on the seeded fixture DB, compare result sets | The only metric that matches the real task; ground truth is *executable*, so no LLM judge needed (say this explicitly in the README) |
 | Valid-SQL rate | parses with `sqlglot` and prepares/executes without error | Distinguishes "wrong" from "broken" |
 | Normalised exact match | whitespace/keyword-cased string equality | Secondary, cheap, comparable to literature |
 | Error taxonomy | missed `WHERE` / wrong join / wrong aggregate / hallucinated column / multiple statements / refusal | Drives *data* fixes, not random tuning |
-| Forgetting probe | mean NLL / perplexity on 20 held-out generic English paragraphs vs base | Shows the tune did not damage the model globally |
+| Prismtting probe | mean NLL / perplexity on 20 held-out generic English paragraphs vs base | Shows the tune did not damage the model globally |
 | Degeneration check | distinct-3-gram ratio on generated SQL | Catches repetition/looping |
 Result-set comparison rules (write these down, they are the subtle part): column count must match; compare as a **multiset** unless gold has `ORDER BY` (then ordered, with a unique tiebreaker in the fixture data); ignore column *names*, compare values; `1e-6` tolerance for floats/aggregates; NULL == NULL for comparison purposes.
 Add **bootstrap 95 % CI** (1000 resamples) and a **McNemar paired test** for every tuned-vs-base comparison — with n=40–60 the point estimate alone is not a claim.
 
-### 3.3 `forge/eval/report.py`
+### 3.3 `prism/eval/report.py`
 - `reports/eval_v1.json` (machine-readable, one record per model×split×metric) + `reports/eval_v1.md` (human) + `reports/figures/*.png`
   (grouped bar chart with CI whiskers, per-slice heatmap model×slice, before/after example gallery of 5 wins and 5 failures with the error class).
 - Report **test-in** and **test-out** separately: in-distribution score vs unseen-schema generalisation. The second is the number you quote.
@@ -360,7 +360,7 @@ assert identical (or documented-difference) outputs. This catches prompt-templat
 
 ### 3.5 CLI contract
 ```bash
-forge-eval --models base,artifacts/sft_v1,artifacts/dpo_v1 --split test_in,test_out \
+prism-eval --models base,artifacts/sft_v1,artifacts/dpo_v1 --split test_in,test_out \
            --out reports/eval_v1 --seed 42        # writes json + md + figures
 ```
 
@@ -395,7 +395,7 @@ How would you detect that the served model uses a different prompt template than
 > **0.0 on all 88 tensors** → the "DPO stretch goal" shipped a bit-identical copy of the SFT adapter. Fix it or drop it honestly.
 
 ### 4.1 Step 1 — reproduce the degeneracy in 30 seconds
-`forge/train/debug_dpo.py`: load the SFT adapter (4-bit), score one chosen/rejected pair and print
+`prism/train/debug_dpo.py`: load the SFT adapter (4-bit), score one chosen/rejected pair and print
 `policy_logp_chosen, policy_logp_rejected, ref_logp_chosen, ref_logp_rejected, margin`.
 Expected today: `ref_logp == policy_logp` → margin 0 → loss log 2 → zero learning signal. **Root cause class: the reference path and/or the
 adapter dtype make policy and reference numerically identical.**
@@ -408,13 +408,13 @@ adapter dtype make policy and reference numerically identical.**
 | 3 | Gradients never reach LoRA params (frozen base + grad checkpointing) | log `grad_norm`; assert it is > 0 in the first 5 steps | `model.enable_input_require_grads()` (you had this) + verify `grad_norm` is logged at all |
 | 4 | Prompt tokens not masked → chosen/rejected differ only in the prompt region | compare per-token logprobs of chosen vs rejected regions | pass proper `prompt`/`chosen`/`rejected` fields (TRL masks the prompt automatically) |
 | 5 | Optimizer never steps (grad-accum/epochs arithmetic, lr 5e-6 on 20 pairs) | count optimizer steps in the log | raise lr to 1–2e-5, ≥50 pairs, 1–2 epochs |
-**Add a permanent guard** so this never recurs silently: `forge/train/check_training_delta.py` compares adapter tensors before/after a run and
+**Add a permanent guard** so this never recurs silently: `prism/train/check_training_delta.py` compares adapter tensors before/after a run and
 fails if `max_abs_diff == 0`; plus a pytest asserting `loss != log 2` after 10 steps on a 20-row fixture. That guard is the difference between a
 scipt that "finishes" and an experiment you can trust.
 
 ### 4.3 Step 3 — build preference data **on-policy** (this is the real upgrade)
 Your current `dpo_data.jsonl` rejected answers are trivially wrong (`SELECT * FROM users ORDER BY total DESC`), so the preference signal is nearly free.
-Better loop (`forge/train/make_prefs.py`):
+Better loop (`prism/train/make_prefs.py`):
 1. sample `n = 4` completions per **train** prompt from the SFT checkpoint (`temperature 0.8`, `top_p 0.95`);
 2. score each by the Phase-3 executor (execution accuracy / valid SQL / normalised EM — a **verifiable reward**);
 3. keep prompts where `best > worst`; label `chosen = best`, `rejected = worst`; prefer **hard negatives** (executes fine but wrong `WHERE`/aggregate/join);
@@ -455,12 +455,12 @@ bug fix and a memory win? Why are execution-verified automatic labels better tha
 > Goal: produce `artifacts/merged_w4a16/` and a table of **size / VRAM / latency / execution-accuracy** vs the fp16 checkpoint.
 > Spec asks for a documented quality loss, not just a smaller file.
 
-### 5.1 Merge first (`forge/quant/merge.py`)
+### 5.1 Merge first (`prism/quant/merge.py`)
 Load base in fp16 + SFT adapter → `merge_and_unload()` → `save_pretrained("artifacts/merged_fp16")` + tokenizer.
 On 4 GB, load on CPU (fp16 base ≈ 2.2 GB, 14 GB RAM) if the GPU path OOMs, then save.
 **Equivalence check (cheap, catches merge bugs):** greedy-decode 10 prompts with (a) base+adapter and (b) merged checkpoint → outputs must match exactly.
 
-### 5.2 Quantize with vLLM's own toolchain (`forge/quant/quantize.py`, `venv-quant`)
+### 5.2 Quantize with vLLM's own toolchain (`prism/quant/quantize.py`, `venv-quant`)
 ```bash
 uv venv venv-quant && uv pip install llmcompressor==0.13.0
 # W4A16 = 4-bit weights, 16-bit activations: GPTQ (Hessian-based) or AWQ (activation-aware scaling)
@@ -471,7 +471,7 @@ uv venv venv-quant && uv pip install llmcompressor==0.13.0
   W4A16 weight-only is the right choice for a 4 GB memory-bound decode workload, W8A8/SmoothQuant is the accuracy-safer alternative if W4A16 degrades.
 - Quantize the **base** model too, so the throughput comparison in Phase 6 has a matched (quantized-base vs quantized-tuned) baseline.
 
-### 5.3 Measure (`forge/quant/measure.py`) → `reports/quant_report.md`
+### 5.3 Measure (`prism/quant/measure.py`) → `reports/quant_report.md`
 | Column | How |
 |---|---|
 | Disk size (GB) | file sizes of merged_fp16 vs merged_w4a16 |
@@ -513,7 +513,7 @@ does W4A16 actually improve, and why might throughput barely move for a 1.1 B mo
 uv venv venv-serve && source venv-serve/bin/activate
 uv pip install "vllm==0.29.0" fastapi uvicorn prometheus-client httpx   # vLLM pins torch==2.13.0 -> separate venv
 
-vllm serve artifacts/merged_fp16 --served-model-name forge-base \\
+vllm serve artifacts/merged_fp16 --served-model-name prism-base \\
   --enable-lora --lora-modules sft=artifacts/sft_v1 dpo=artifacts/dpo_v1 \\
   --max-lora-rank 32 --max-loras 2 \\
   --gpu-memory-utilization 0.85 --max-model-len 1024 --max-num-seqs 8 \\
@@ -531,18 +531,18 @@ vllm serve artifacts/merged_fp16 --served-model-name forge-base \\
 format with LoRA in vLLM — merge to fp16 (or use the W4A16 artifact from Phase 5) and load the adapter dynamically. That is the honest reason
 Phase 5 exists.
 
-### 6.2 Gateway (`forge/serve/app.py`)
+### 6.2 Gateway (`prism/serve/app.py`)
 - `POST /v1/chat/completions` (**OpenAI-compatible**) *and* `POST /v1/completions` + a thin `POST /generate`.
 - **Template trap:** `TinyLlama-…-intermediate` is a *base* model with **no chat template**, so vLLM's `messages` path has nothing to apply —
   document that clients use `/v1/completions` (or send pre-rendered prompts), and build every prompt via
-  `forge/data/prompt.py::render()`. A wrong template here silently destroys quality; the Phase-3 parity test is what catches it.
+  `prism/data/prompt.py::render()`. A wrong template here silently destroys quality; the Phase-3 parity test is what catches it.
 - **Streaming:** SSE passthrough with `stream=True`; propagate client disconnects as cancellation so the engine frees the slot
   (a dropped client must not keep generating).
 - **Response headers:** `X-Request-Id`, `X-Queue-Time-Ms`, `X-Prefill-Ms`, `X-Prompt-Tokens`, `X-Completion-Tokens`, `X-Variant`, `X-Model`.
 - **Accounting:** request usage via `stream_options={"include_usage": true}` (token counts are the input of the cost model).
 - Deadline header (`X-Deadline-Ms`) honoured end-to-end; structured JSON logs with the request id.
 
-### 6.3 Bounded queue + admission control (`forge/serve/queue.py`) — the “never silently drops” requirement
+### 6.3 Bounded queue + admission control (`prism/serve/queue.py`) — the “never silently drops” requirement
 - `asyncio.Queue(maxsize=max_queue)` + `max_concurrency` workers; **bounded** means the system has a defined behaviour at overload, not a crash.
 - Over capacity → `429 Too Many Requests` + `Retry-After` + body `{error, queue_depth, capacity, retry_after_ms}` and increment
   `rejected_total{reason="queue_full"}`. **Every rejection is explicit, counted and logged** — that is what the spec means.
@@ -551,7 +551,7 @@ Phase 5 exists.
 - Graceful shutdown: stop admitting → `503` + `Retry-After`, drain in-flight work, then exit (`SIGTERM` handler).
 - `configs/serve.yaml`: `{max_queue, max_concurrency, request_timeout_s, max_new_tokens, lanes, deadline_ms, cost: {gpu_usd_per_hour}}`.
 
-### 6.4 Metrics + dashboard (`forge/serve/metrics.py`, `forge/serve/dashboard.py`)
+### 6.4 Metrics + dashboard (`prism/serve/metrics.py`, `prism/serve/dashboard.py`)
 - `prometheus-client` on the gateway: counters `requests_total{variant,status}`, `rejected_total{reason}`, `tokens_total{variant,kind}`;
   histograms `queue_wait_seconds`, `ttft_seconds`, `latency_seconds`, `tokens_per_request`; gauges `queue_depth`, `in_flight`,
   `kv_cache_usage_perc`, `gpu_memory_used_bytes`.
@@ -564,7 +564,7 @@ Phase 5 exists.
 - **Percentiles:** expose Prometheus histograms for aggregates *and* keep an in-process rolling window for exact p50/p95/p99 in the dashboard
   (histogram quantiles are approximations — be able to explain the difference; Grafana/Prometheus in Docker is optional and runs CPU-only here).
 
-### 6.5 Load testing and the serving benchmark (`forge/serve/loadtest.py`) → `reports/serving_bench.md`
+### 6.5 Load testing and the serving benchmark (`prism/serve/loadtest.py`) → `reports/serving_bench.md`
 - **Closed-loop sweep first:** concurrency c ∈ {1, 2, 4, 8, 16}, 200 requests each over a fixed prompt mix (short/medium), report requests/s,
   aggregate output tokens/s, TTFT p50/p95, end-to-end p50/p95/p99, 429/504 counts, and the queue-depth timeline.
 - **Then open-loop (Poisson arrivals at a fixed rate)** to find the saturation knee: raise the offered rate until p99 breaks the SLA (e.g. 3 s).
@@ -616,7 +616,7 @@ counted either way? Why can't the 4-bit training checkpoint be served directly w
 > Goal: route a percentage of traffic to a new checkpoint, compare live metrics, and have a documented promotion/rollback rule.
 > Plus a **queue-depth-driven autoscaling control loop** that is real code, honestly labelled as simulated where the host prevents reality.
 
-### 7.1 A/B routing (`forge/serve/router.py`)
+### 7.1 A/B routing (`prism/serve/router.py`)
 ```yaml
 # configs/serve.yaml
 experiment:
@@ -636,7 +636,7 @@ experiment:
 - **Be honest about power:** at 10 % traffic, detecting a 2-point accuracy difference needs thousands of requests (do the arithmetic and show it).
   So the offline harness is the *primary* evidence and online A/B is the *guardrail* mechanism. Saying that explicitly is worth more than pretending you proved a lift.
 
-### 7.2 Autoscaling control loop (`forge/serve/autoscale.py`)
+### 7.2 Autoscaling control loop (`prism/serve/autoscale.py`)
 - **Signal:** scale-out when `queue_wait p95 > 250 ms` **or** `queue_depth > 2 × max_concurrency` sustained for 30 s; scale-in when `queue_depth == 0`
   and `in_flight < 50 %` for 120 s. Hysteresis + cooldown are mandatory (otherwise the loop flaps between 1 and 2 replicas).
 - **`ReplicaProvider` interface:** `list() / scale_to(n) / health()`, with three implementations and a config switch:
@@ -732,25 +732,25 @@ uv venv venv && uv pip install -e ".[dev]" && make test
 make data                                   # build + dedupe + split + manifest + leakage test
 # Phase 2
 uv pip install mlflow
-forge-train --config configs/sft/r16_alllinear.yaml         # one run
-forge-train --config configs/sft/sweep.yaml --sweep         # overnight sweep
+prism-train --config configs/sft/r16_alllinear.yaml         # one run
+prism-train --config configs/sft/sweep.yaml --sweep         # overnight sweep
 mlflow ui --backend-store-uri sqlite:///mlflow.db &         # compare runs
 # Phase 3
-forge-eval --models base,artifacts/sft_v1 --split test_in,test_out --out reports/eval_v1
+prism-eval --models base,artifacts/sft_v1 --split test_in,test_out --out reports/eval_v1
 # Phase 4
-forge-train --config configs/dpo/v1.yaml --make-prefs --on-policy
+prism-train --config configs/dpo/v1.yaml --make-prefs --on-policy
 # Phase 5
 uv venv venv-quant && uv pip install llmcompressor
-forge-quant --config configs/quant/w4a16.yaml --calib data/v1/train.jsonl --out artifacts/merged_w4a16
+prism-quant --config configs/quant/w4a16.yaml --calib data/v1/train.jsonl --out artifacts/merged_w4a16
 # Phase 6
 uv venv venv-serve && uv pip install "vllm==0.29.0" fastapi uvicorn prometheus-client
 vllm serve artifacts/merged_fp16 --enable-lora --lora-modules sft=artifacts/sft_v1 dpo=artifacts/dpo_v1 \\
   --max-lora-rank 32 --max-model-len 1024 --max-num-seqs 8 --gpu-memory-utilization 0.85 --port 8000 &
-forge-serve --config configs/serve.yaml        # gateway on :8080, dashboard at /dashboard, metrics at /metrics
-forge-bench --concurrency 1,2,4,8,16 --requests 200 --out reports/serving_bench.md
+prism-serve --config configs/serve.yaml        # gateway on :8080, dashboard at /dashboard, metrics at /metrics
+prism-bench --concurrency 1,2,4,8,16 --requests 200 --out reports/serving_bench.md
 # Phase 7
 curl -N localhost:8080/v1/completions -H 'X-User: u1' -d '{"prompt":"...","max_tokens":64}'   # watch X-Variant
-forge-autoscale --scenario overload --provider simulated --out reports/figures/autoscale.png
+prism-autoscale --scenario overload --provider simulated --out reports/figures/autoscale.png
 ```
 
 # Appendix B — VRAM and time budget on this machine (RTX 3050 Laptop, 3.95 GB)
@@ -834,7 +834,7 @@ $/1K tokens.
 
 ### Start here tomorrow (in this exact order)
 1. `uv venv venv-serve` is irrelevant yet — **first fix the ruler**: build the fixture DBs and the schema-conditioned prompt template (Phase 1.1–1.2).
-2. Write `forge/eval/harness.py` + `metrics.py` and get a **base-model number on 60 held-out prompts** (Phase 3). You cannot improve what you cannot measure,
+2. Write `prism/eval/harness.py` + `metrics.py` and get a **base-model number on 60 held-out prompts** (Phase 3). You cannot improve what you cannot measure,
    and you currently have no valid measurement at all.
 3. Rebuild the dataset to 400/60/60/40 with a leakage test (Phase 1.3–1.5).
 4. Re-train with the Phase-2 config (all-linear, r=16, α=32, lr 2e-4, 4 epochs, dev early stopping) and compare on the harness.

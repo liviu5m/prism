@@ -4,7 +4,8 @@ from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import LoraConfig, PeftModel, get_peft_model, prepare_model_for_kbit_training
 from trl.trainer.sft_config import SFTConfig
 from trl.trainer.sft_trainer import SFTTrainer
-from dataset import getRecords
+from src.dataset import getRecords, tokenizer
+from src.data.prompt import render
 
 model_id = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
 adapter_path = "final_model"
@@ -38,6 +39,7 @@ trainer = SFTTrainer(
     model=model,
     train_dataset=train_ds,
     eval_dataset=eval_ds,
+    processing_class=tokenizer,
     args=SFTConfig(
         output_dir="artifacts/sft_v1",
         max_length=512,                     
@@ -55,6 +57,7 @@ trainer = SFTTrainer(
         load_best_model_at_end=True,
         metric_for_best_model="eval_loss",
         seed=42,
+        completion_only_loss=True,
     ),
 )
 trainer.train()

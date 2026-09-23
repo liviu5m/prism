@@ -26,9 +26,9 @@ serve = ["vllm==0.29.0", "fastapi", "uvicorn", "prometheus-client", "httpx"]
 quant = ["llmcompressor"]
 
 [project.scripts]
-forge-train = "prism.train.sft:main"
-forge-eval = "prism.eval.harness:main"
-forge-serve = "prism.forge.serve.app:main"
+prism-train = "prism.train.sft:main"
+prism-eval = "prism.eval.harness:main"
+prism-serve = "prism.serve.app:main"
 
 [build-system]
 requires = ["setuptools>=61"]
@@ -36,7 +36,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["forge*"]
+include = ["prism*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

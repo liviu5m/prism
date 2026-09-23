@@ -1,6 +1,6 @@
 # PROJECT_STATE.md — session memory bank (keep ≤40 lines, update at the end of each session)
 
-**Goal:** Forge — fine-tune, quantize and serve TinyLlama-1.1B for schema-conditioned Text → SQLite SQL,
+**Goal:** Prism — fine-tune, quantize and serve TinyLlama-1.1B for schema-conditioned Text → SQLite SQL,
 with a task-specific execution-accuracy harness, vLLM serving, A/B rollout and a cost/latency dashboard.
 
 **Hardware/constraints:** RTX 3050 Laptop, 3.95 GB VRAM, 14 GB RAM · Python 3.14.7 (`uv`)
@@ -22,17 +22,18 @@ with a task-specific execution-accuracy harness, vLLM serving, A/B rollout and a
 - Old audit still true: `final_model/` r=8 q/v only, 100 epochs on 50 rows; `dpo_model/` no-op (loss log 2, tensor diff 0.0); `src/serve.py` 0 bytes; `outputs/` empty.
 
 **Current phase:** Phase 1 partly done — 1.1 fixture DBs ✔, 1.2 curated data ✔.
-**Next action:** write `forge/data/prompt.py::render(schema_ddl, question)` (single frozen template with
-`### Schema:` / `### Prompt:` / `### Response:`), then `forge/eval/{harness,metrics}.py` and get the **base model's**
+**Next action:** write `prism/data/prompt.py::render(schema_ddl, question)` (single frozen template with
+`### Schema:` / `### Prompt:` / `### Response:`), then `prism/eval/{harness,metrics}.py` and get the **base model's**
 execution accuracy on dev / test_in / test_out. Not before that: training, DPO, quantization, serving.
 
 **Evidence:** `datasets/README.md` exists (verified-properties section). Still missing: `reports/data_v1_build.md`, `datasets/manifest.json`, `tests/test_no_leakage.py`, then `reports/eval_v1.md`, `reports/quant_report.md`, `reports/serving_bench.md`, `reports/ab_decision.md`, `reports/figures/autoscale.png`.
 
-**Decisions locked:** metric = execution accuracy (+ valid-SQL rate) on `test_in`/`test_out`, base model always in the same
+**Decisions locked:** project/package name = **prism** (`prism/` package, `prism-*` console scripts,
+`PRISM_ROADMAP.md`); metric = execution accuracy (+ valid-SQL rate) on `test_in`/`test_out`, base model always in the same
 table; field names `question`/`context`/`query` (Spider/BIRD style) via one `render()`; train trains, dev selects, test_in/test_out
 only report; `max_length 512`; SFT epochs 4 (not 100), lr 2e-4, bf16, completion-only loss; LoRA r=16 α=32 all-linear.
 
 **Open risks:** the data generator / splitter / verifier scripts live in `/tmp` (lost on reboot — the split rule must be
-committed as `forge/data/split.py`); `sqldata.jsonl` is a superset and a leakage trap if `train.py` globs `datasets/*.jsonl`;
+committed as `prism/data/split.py`); `sqldata.jsonl` is a superset and a leakage trap if `train.py` globs `datasets/*.jsonl`;
 `user` is a table name in both fixtures (DDL otherwise disjoint); 325 train rows is the accuracy ceiling, not hyperparameters;
 autoscaling on this 1-GPU host must be labelled simulated.

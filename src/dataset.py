@@ -1,11 +1,11 @@
 import json
 from transformers import AutoTokenizer
 
-from data.prompt import render
+from src.data.prompt import render
 
 model_id = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
 tokenizer = AutoTokenizer.from_pretrained(model_id)
-
+tokenizer.pad_token = tokenizer.eos_token
 
 def getRecords(file):
     data = [] 

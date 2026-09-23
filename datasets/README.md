@@ -1,4 +1,4 @@
-# datasets/ — text-to-SQL data for Forge
+# datasets/ — text-to-SQL data for Prism
 
 Row contract (identical in every file):
 
