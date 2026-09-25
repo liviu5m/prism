@@ -1,0 +1,75 @@
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:   2%|▏         | 4/201 [00:00<00:06, 28.62it/s]Loading weights:  15%|█▌        | 31/201 [00:00<00:01, 147.88it/s]Loading weights:  27%|██▋       | 54/201 [00:00<00:00, 179.71it/s]Loading weights:  39%|███▉      | 78/201 [00:00<00:00, 196.98it/s]Loading weights:  51%|█████     | 103/201 [00:00<00:00, 211.17it/s]Loading weights:  62%|██████▏   | 125/201 [00:00<00:00, 208.39it/s]Loading weights:  74%|███████▎  | 148/201 [00:00<00:00, 212.82it/s]Loading weights:  86%|████████▌ | 172/201 [00:00<00:00, 220.46it/s]Loading weights:  97%|█████████▋| 195/201 [00:00<00:00, 216.77it/s]Loading weights: 100%|██████████| 201/201 [00:00<00:00, 201.71it/s]
+[4/60] exec_ok=0 valid=0
+[5/60] exec_ok=0 valid=0
+[6/60] exec_ok=0 valid=0
+[7/60] exec_ok=0 valid=0
+[8/60] exec_ok=0 valid=0
+[9/60] exec_ok=0 valid=0
+[10/60] exec_ok=0 valid=0
+[11/60] exec_ok=0 valid=0
+[12/60] exec_ok=0 valid=0
+[13/60] exec_ok=0 valid=0
+[14/60] exec_ok=0 valid=0
+[15/60] exec_ok=0 valid=0
+[16/60] exec_ok=0 valid=0
+[17/60] exec_ok=0 valid=0
+[18/60] exec_ok=0 valid=0
+[19/60] exec_ok=0 valid=0
+[20/60] exec_ok=0 valid=0
+[21/60] exec_ok=0 valid=0
+[22/60] exec_ok=0 valid=0
+[23/60] exec_ok=0 valid=0
+[24/60] exec_ok=0 valid=0
+[25/60] exec_ok=0 valid=0
+[26/60] exec_ok=0 valid=0
+[27/60] exec_ok=0 valid=0
+[28/60] exec_ok=0 valid=0
+[29/60] exec_ok=0 valid=0
+[30/60] exec_ok=0 valid=0
+[31/60] exec_ok=0 valid=0
+[32/60] exec_ok=0 valid=0
+[33/60] exec_ok=0 valid=0
+[34/60] exec_ok=0 valid=0
+[35/60] exec_ok=0 valid=0
+[36/60] exec_ok=0 valid=0
+[37/60] exec_ok=0 valid=0
+[38/60] exec_ok=0 valid=0
+[39/60] exec_ok=0 valid=0
+[40/60] exec_ok=0 valid=0
+[41/60] exec_ok=0 valid=0
+[42/60] exec_ok=0 valid=0
+[43/60] exec_ok=0 valid=0
+[44/60] exec_ok=0 valid=0
+[45/60] exec_ok=0 valid=0
+[46/60] exec_ok=0 valid=0
+[47/60] exec_ok=0 valid=0
+[48/60] exec_ok=0 valid=0
+[49/60] exec_ok=0 valid=0
+[50/60] exec_ok=0 valid=0
+[51/60] exec_ok=0 valid=0
+[52/60] exec_ok=0 valid=0
+[53/60] exec_ok=0 valid=0
+[54/60] exec_ok=0 valid=0
+[55/60] exec_ok=0 valid=0
+[56/60] exec_ok=0 valid=0
+[57/60] exec_ok=0 valid=0
+[58/60] exec_ok=0 valid=0
+[59/60] exec_ok=0 valid=0
+[60/60] exec_ok=0 valid=0
+
+MODEL base
+execution accuracy: 0/60 = 0.000
+valid SQL rate:     0/60 = 0.000
+time: 110s
+
+ord_0001  (TypeError: 'NoneType' object is not iterable)
+  gold: SELECT name FROM user WHERE created_at >= '2000-01-01';
+  pred: 
+
+ord_0028  (TypeError: 'NoneType' object is not iterable)
+  gold: SELECT COUNT(*) FROM user_orders WHERE created_at BETWEEN '2008-01-01' AND '2008-12-31';
+  pred: 
+
+ord_0034  (TypeError: 'NoneType' object is not iterable)
+  gold: SELECT name, email FROM user ORDER BY created_at DESC, id DESC LIMIT 5;
+  pred: 

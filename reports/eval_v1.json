@@ -1,0 +1,71 @@
+{
+  "report": "eval_v1",
+  "created": "2026-09-25",
+  "git": "bf10d20 (dirty tree)",
+  "harness": "src/eval/exacc.py, run as: venv/bin/python -m src.eval.exacc --model <model> --file <split jsonl> --db <orders|cars>",
+  "decoding": {"do_sample": false, "max_new_tokens": 128, "prompt": "src/data/prompt.py::render(context, question)"},
+  "metric": {
+    "execution_accuracy": "predicted SQL is executed on the fixture named by the row's db_id and its result set compared with the gold result set (multiset unless the gold has ORDER BY)",
+    "valid_sql_rate": "prediction executed without error; currently means 'it ran', not 'it parses' (no sqlglot check yet)"
+  },
+  "results": [
+    {"model": "base", "split": "dev", "db": "orders", "schema_seen": true, "n": 60, "correct": 0, "valid": 0, "accuracy": 0.0, "valid_rate": 0.0, "seconds": 110, "log": "reports/logs/exacc_dev_base_2026-09-25.log"},
+    {"model": "artifacts/sft_v1/checkpoint-42", "split": "dev", "db": "orders", "schema_seen": true, "n": 60, "correct": 43, "valid": 59, "accuracy": 0.717, "valid_rate": 0.983, "seconds": 68, "log": "reports/logs/exacc_dev_c42_2026-09-25.log"},
+    {"model": "artifacts/sft_v1/checkpoint-63", "split": "dev", "db": "orders", "schema_seen": true, "n": 60, "correct": 46, "valid": 60, "accuracy": 0.767, "valid_rate": 1.0, "seconds": 63, "log": "reports/logs/exacc_dev_c63_2026-09-25.log"},
+    {"model": "artifacts/sft_v1/checkpoint-84", "split": "dev", "db": "orders", "schema_seen": true, "n": 60, "correct": 47, "valid": 60, "accuracy": 0.783, "valid_rate": 1.0, "seconds": 62, "log": "reports/logs/exacc_dev_c84_2026-09-25.log"},
+    {"model": "base", "split": "test_in", "db": "orders", "schema_seen": true, "n": 60, "correct": 0, "valid": 0, "accuracy": 0.0, "valid_rate": 0.0, "seconds": 112, "log": "reports/logs/exacc_test_in_base_2026-09-25.log"},
+    {"model": "artifacts/sft_v1", "split": "test_in", "db": "orders", "schema_seen": true, "n": 60, "correct": 47, "valid": 60, "accuracy": 0.783, "valid_rate": 1.0, "seconds": 56, "log": "reports/logs/exacc_test_in_sft_v1_2026-09-25.log"},
+    {"model": "base", "split": "test_out", "db": "cars", "schema_seen": false, "n": 73, "correct": 0, "valid": 0, "accuracy": 0.0, "valid_rate": 0.0, "seconds": 182, "log": "reports/logs/exacc_test_out_base_2026-09-25.log"},
+    {"model": "artifacts/sft_v1", "split": "test_out", "db": "cars", "schema_seen": false, "n": 73, "correct": 19, "valid": 67, "accuracy": 0.26, "valid_rate": 0.918, "seconds": 75, "log": "reports/logs/exacc_test_out_sft_v1_2026-09-25.log"}
+  ],
+  "headline": {
+    "in_distribution": {"split": "test_in", "accuracy": 0.783},
+    "unseen_schema": {"split": "test_out", "accuracy": 0.26},
+    "delta_points": -52.3,
+    "base_model_all_splits": 0.0
+  },
+  "interval": {
+    "method": "normal approximation, NOT the bootstrap the roadmap requires",
+    "n": 73,
+    "accuracy": 0.26,
+    "approx_95_ci": [0.16, 0.36],
+    "note": "quote as 'roughly a quarter, between ~16 % and ~36 %'"
+  },
+  "nondeterminism": {
+    "observation": "the same epoch-4 weights scored 46/60 (earlier run) and 47/60 (logged run) on dev",
+    "one_question_points": 1.7,
+    "candidate_causes": [
+      "4-bit bitsandbytes kernels are not bit-deterministic",
+      "artifacts/sft_v1 stores the weights in fp32 while checkpoint-84 stores bf16 (308/308 tensors match, max abs diff 2.2e-4 = one bf16 ulp)"
+    ]
+  },
+  "base_model_behaviour": {
+    "valid_sql_rate": 0.0,
+    "observed": "answers in English prose, e.g. 'The average daily rate of the fleet is 1000.'; one logged failure per split is an empty prediction caused by extract() splitting on '###'",
+    "caveat": "raw generations are not printed by the harness, so the empty-prediction case is not fully explained"
+  },
+  "failure_examples": {
+    "dev": [
+      {"id": "ord_0001", "category": "wrong WHERE boundary + extra column", "gold": "SELECT name FROM user WHERE created_at >= '2000-01-01'", "pred": "SELECT name, email FROM user WHERE created_at > '2000-01-01'"},
+      {"id": "ord_0034", "category": "dropped ORDER BY tiebreaker + extra column", "gold": "SELECT name, email FROM user ORDER BY created_at DESC, id DESC LIMIT 5", "pred": "SELECT name, email, created_at FROM user ORDER BY created_at DESC, id LIMIT 5"},
+      {"id": "ord_0098", "category": "dropped tiebreaker + missing column", "gold": "SELECT id, quantity, created_at FROM user_orders ORDER BY created_at DESC, id DESC LIMIT 5", "pred": "SELECT id, created_at FROM user_orders ORDER BY created_at DESC, id LIMIT 5"}
+    ],
+    "test_in": [
+      {"id": "ord_0027", "category": "dropped tiebreaker + extra column", "gold": "SELECT name, email FROM user ORDER BY created_at DESC, id DESC LIMIT 1", "pred": "SELECT name, email, created_at FROM user ORDER BY created_at DESC, id LIMIT 1"},
+      {"id": "ord_0036", "category": "dropped a requested column", "gold": "SELECT id, quantity FROM user_orders WHERE item_id = 18", "pred": "SELECT id FROM user_orders WHERE item_id = 18"},
+      {"id": "ord_0048", "category": "dropped a requested column", "gold": "SELECT name, price, stock FROM item WHERE stock > 5 ORDER BY price DESC, id LIMIT 5", "pred": "SELECT item.name, item.price FROM item WHERE item.stock > 5 ORDER BY item.price DESC, item.id LIMIT 5"}
+    ],
+    "test_out": [
+      {"id": "car_0004", "category": "wrong target column for the filter value + wrong projection", "gold": "SELECT car.make, car.model, dealership.name AS dealership_name FROM car JOIN dealership ON car.dealership_id = dealership.id WHERE dealership.city = 'New Danielborough'", "pred": "SELECT car.vin, car.daily_rate FROM car JOIN dealership ON car.dealership_id = dealership.id WHERE dealership.name LIKE 'New Danielborough%'"},
+      {"id": "car_0005", "category": "aggregate scope changed (global to per-group) + extra columns", "gold": "SELECT make, model FROM car WHERE daily_rate > (SELECT AVG(daily_rate) FROM car)", "pred": "SELECT car.make, car.model, car.year, car.vin, car.daily_rate FROM car WHERE car.daily_rate > (SELECT AVG(x.daily_rate) FROM car AS x WHERE x.dealership_id = car.dealership_id)"},
+      {"id": "car_0006", "category": "wrong query shape (GROUP BY instead of LIMIT/OFFSET)", "gold": "SELECT make, model, daily_rate FROM car ORDER BY daily_rate DESC, id LIMIT 1 OFFSET 1", "pred": "SELECT dealership_id, MAX(daily_rate) FROM car GROUP BY dealership_id ORDER BY daily_rate DESC, dealership_id LIMIT 1"}
+    ]
+  },
+  "open_items": [
+    "log every failure with a category (the harness prints only the first 3 per run)",
+    "bootstrap 95 % CI (1000 resamples) + McNemar paired test per split",
+    "per-pattern slices",
+    "sqlglot parse check for the valid-SQL rate",
+    "regenerate the report tables from this JSON"
+  ]
+}

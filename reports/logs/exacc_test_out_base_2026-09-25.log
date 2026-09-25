@@ -1,0 +1,88 @@
+Loading weights:   0%|          | 0/201 [00:00<?, ?it/s]Loading weights:   1%|          | 2/201 [00:00<00:13, 14.70it/s]Loading weights:   6%|▋         | 13/201 [00:00<00:03, 60.69it/s]Loading weights:  16%|█▌        | 32/201 [00:00<00:01, 112.03it/s]Loading weights:  25%|██▌       | 51/201 [00:00<00:01, 137.10it/s]Loading weights:  36%|███▋      | 73/201 [00:00<00:00, 162.71it/s]Loading weights:  47%|████▋     | 95/201 [00:00<00:00, 177.12it/s]Loading weights:  57%|█████▋    | 114/201 [00:00<00:00, 177.04it/s]Loading weights:  67%|██████▋   | 135/201 [00:00<00:00, 186.53it/s]Loading weights:  78%|███████▊  | 157/201 [00:00<00:00, 191.61it/s]Loading weights:  88%|████████▊ | 177/201 [00:01<00:00, 187.25it/s]Loading weights: 100%|██████████| 201/201 [00:01<00:00, 168.60it/s]
+[4/73] exec_ok=0 valid=0
+[5/73] exec_ok=0 valid=0
+[6/73] exec_ok=0 valid=0
+[7/73] exec_ok=0 valid=0
+[8/73] exec_ok=0 valid=0
+[9/73] exec_ok=0 valid=0
+[10/73] exec_ok=0 valid=0
+[11/73] exec_ok=0 valid=0
+[12/73] exec_ok=0 valid=0
+[13/73] exec_ok=0 valid=0
+[14/73] exec_ok=0 valid=0
+[15/73] exec_ok=0 valid=0
+[16/73] exec_ok=0 valid=0
+[17/73] exec_ok=0 valid=0
+[18/73] exec_ok=0 valid=0
+[19/73] exec_ok=0 valid=0
+[20/73] exec_ok=0 valid=0
+[21/73] exec_ok=0 valid=0
+[22/73] exec_ok=0 valid=0
+[23/73] exec_ok=0 valid=0
+[24/73] exec_ok=0 valid=0
+[25/73] exec_ok=0 valid=0
+[26/73] exec_ok=0 valid=0
+[27/73] exec_ok=0 valid=0
+[28/73] exec_ok=0 valid=0
+[29/73] exec_ok=0 valid=0
+[30/73] exec_ok=0 valid=0
+[31/73] exec_ok=0 valid=0
+[32/73] exec_ok=0 valid=0
+[33/73] exec_ok=0 valid=0
+[34/73] exec_ok=0 valid=0
+[35/73] exec_ok=0 valid=0
+[36/73] exec_ok=0 valid=0
+[37/73] exec_ok=0 valid=0
+[38/73] exec_ok=0 valid=0
+[39/73] exec_ok=0 valid=0
+[40/73] exec_ok=0 valid=0
+[41/73] exec_ok=0 valid=0
+[42/73] exec_ok=0 valid=0
+[43/73] exec_ok=0 valid=0
+[44/73] exec_ok=0 valid=0
+[45/73] exec_ok=0 valid=0
+[46/73] exec_ok=0 valid=0
+[47/73] exec_ok=0 valid=0
+[48/73] exec_ok=0 valid=0
+[49/73] exec_ok=0 valid=0
+[50/73] exec_ok=0 valid=0
+[51/73] exec_ok=0 valid=0
+[52/73] exec_ok=0 valid=0
+[53/73] exec_ok=0 valid=0
+[54/73] exec_ok=0 valid=0
+[55/73] exec_ok=0 valid=0
+[56/73] exec_ok=0 valid=0
+[57/73] exec_ok=0 valid=0
+[58/73] exec_ok=0 valid=0
+[59/73] exec_ok=0 valid=0
+[60/73] exec_ok=0 valid=0
+[61/73] exec_ok=0 valid=0
+[62/73] exec_ok=0 valid=0
+[63/73] exec_ok=0 valid=0
+[64/73] exec_ok=0 valid=0
+[65/73] exec_ok=0 valid=0
+[66/73] exec_ok=0 valid=0
+[67/73] exec_ok=0 valid=0
+[68/73] exec_ok=0 valid=0
+[69/73] exec_ok=0 valid=0
+[70/73] exec_ok=0 valid=0
+[71/73] exec_ok=0 valid=0
+[72/73] exec_ok=0 valid=0
+[73/73] exec_ok=0 valid=0
+
+MODEL base
+execution accuracy: 0/73 = 0.000
+valid SQL rate:     0/73 = 0.000
+time: 182s
+
+car_0001  (TypeError: 'NoneType' object is not iterable)
+  gold: SELECT name FROM dealership WHERE city = 'New Danielborough';
+  pred: 
+
+car_0002  (OperationalError: near "The": syntax error)
+  gold: SELECT ROUND(AVG(daily_rate), 2) FROM car;
+  pred: The average daily rate of the fleet is 1000.
+
+car_0003  (OperationalError: near "The": syntax error)
+  gold: SELECT service_details, ROUND(AVG(cost), 2) AS avg_cost FROM maintenance_log GROUP BY service_details ORDER BY avg_cost DESC, service_details;
+  pred: The average cost of each type of maintenance service is $100.

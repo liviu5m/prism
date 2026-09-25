@@ -2,11 +2,18 @@ import json, re, sqlite3, time, torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig
 from peft import PeftModel
 from src.data.prompt import render
+import argparse
 
 BASE = "TinyLlama/TinyLlama-1.1B-intermediate-step-1431k-3T"
-MODEL = "artifacts/sft_v1"          
-ROWS = [json.loads(l) for l in open("datasets/dev.jsonl") if l.strip()]
-DB = "orders.db"
+ap = argparse.ArgumentParser()
+ap.add_argument("--model", default="artifacts/sft_v1")
+ap.add_argument("--split", default="datasets/dev.jsonl")
+ap.add_argument("--db", default="orders")
+ap.add_argument("--file", default="datasets/dev.jsonl")
+args = ap.parse_args()
+MODEL = args.model
+ROWS = [json.loads(l) for l in open(args.file) if l.strip()]
+DB = args.db+".db"
 
 def extract(text):                   # one statement only
     sql = text.split("###")[0]
